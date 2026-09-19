@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinPro - Premium Home Accounting</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons (Premium looking icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0B0F19',
+                            card: 'rgba(255, 255, 255, 0.03)',
+                            cardHover: 'rgba(255, 255, 255, 0.05)',
+                            border: 'rgba(255, 255, 255, 0.08)',
+                            primary: '#6366F1', // Indigo 500
+                            secondary: '#A855F7', // Purple 500
+                            accent: '#EC4899', // Pink 500
+                            success: '#10B981', // Emerald 500
+                            danger: '#EF4444', // Red 500
+                        }
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                        'glass-gradient': 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base styles and scrollbar formatting */
+        body {
+            background-color: #0B0F19;
+            color: #F8FAFC;
+            overflow: hidden; 
+        }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: var(--tw-colors-brand-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--tw-colors-brand-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .glass-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--tw-colors-brand-border);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-input:focus {
+            outline: none;
+            border-color: var(--tw-colors-brand-primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Ambient background glow blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+            animation: float 20s ease-in-out infinite;
+        }
+        .blob-1 {
+            top: -10%; left: -10%; width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(99,102,241,0.4) 0%, rgba(99,102,241,0) 70%);
+        }
+        .blob-2 {
+            bottom: -20%; right: -10%; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(168,85,247,0.4) 0%, rgba(168,85,247,0) 70%);
+            animation-delay: -5s;
+        }
+        .blob-3 {
+            top: 40%; left: 40%; width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(236,72,153,0.2) 0%, rgba(236,72,153,0) 70%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+    </style>
+</head>
+<body class="flex h-screen w-full relative antialiased">
+
+    <!-- Ambient Background Effects -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- html2pdf.js for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="glass-panel w-72 h-full z-20 flex-col justify-between hidden md:flex transition-all duration-300 relative border-r border-t-0 border-b-0 border-l-0">
+        <div class="p-6 h-full overflow-y-auto custom-scrollbar">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 mb-10">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center shadow-lg shadow-brand-primary/30">
+                    <i class="ph ph-house-line text-2xl text-white font-bold"></i>
+                </div>
+                <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">HomeFin</h1>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="space-y-2">
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-brand-primary/20 text-white border border-brand-primary/30 transition-all">
+                    <i class="ph ph-squares-four text-xl text-brand-primary"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                
+                <div class="pt-6 pb-2 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Data Settings</div>
+                
+                <!-- JSON Backup and Import -->
+                <button onclick="exportJSON()" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all text-left">
+                    <i class="ph ph-download-simple text-xl"></i>
+                    <span class="font-medium">Backup (JSON)</span>
+                </button>
+                <label class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all cursor-pointer">
+                    <i class="ph ph-upload-simple text-xl"></i>
+                    <span class="font-medium">Import Backup</span>
+                    <input type="file" id="importFile" class="hidden" accept=".json" onchange="importJSON(event)">
+                </label>
+
+                <!-- NEW: Download PDF Button -->
+                <button onclick="downloadPDF()" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all text-left">
+                    <i class="ph ph-file-pdf text-xl text-brand-danger"></i>
+                    <span class="font-medium">Download PDF Report</span>
+                </button>
+
+                <button onclick="window.openGitHubModal()" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all text-left">
+                    <i class="ph ph-github-logo text-xl text-brand-secondary"></i>
+                    <span class="font-medium text-brand-secondary">GitHub Sync</span>
+                </button>
+                
+                <div class="p-4 mt-4 bg-brand-success/10 border border-brand-success/20 rounded-xl">
+                    <p class="text-xs text-brand-success">
+                        <i class="ph ph-cloud-check inline-block mr-1"></i> Data automatically syncs to cloud. Use JSON for GitHub backups.
+                    </p>
+                </div>
+            </nav>
+        </div>
+
+        <!-- User Profile Area -->
+        <div class="p-6 border-t border-brand-border bg-black/20">
+            <div class="flex items-center gap-3">
+                <img src="https://ui-avatars.com/api/?name=Home+Admin&background=6366F1&color=fff&rounded=true" alt="User Profile" class="w-10 h-10 rounded-full shadow-md">
+                <div>
+                    <p class="text-sm font-semibold text-white">Home Admin</p>
+                    <p class="text-xs text-brand-success font-medium flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-success"></span> Online Sync Active</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+        
+        <!-- Header -->
+        <header class="glass-panel border-x-0 border-t-0 px-6 py-4 flex items-center justify-between z-20">
+            <div class="flex items-center gap-4">
+                <button id="mobileMenuBtn" class="md:hidden text-gray-300 hover:text-white p-2 rounded-lg bg-white/5">
+                    <i class="ph ph-list text-2xl"></i>
+                </button>
+                <div>
+                    <h2 class="text-xl font-bold text-white">Household Overview</h2>
+                    <p id="currentDateDisplay" class="text-xs text-gray-400">Loading date...</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:block bg-white/5 rounded-full p-1 border border-brand-border">
+                    <select id="timeFilter" onchange="window.changeFilter(this.value)" class="bg-transparent text-sm text-white px-3 py-1 outline-none cursor-pointer">
+                        <option value="day" class="bg-brand-dark">Today</option>
+                        <option value="month" class="bg-brand-dark" selected>This Month</option>
+                        <option value="year" class="bg-brand-dark">This Year</option>
+                        <option value="all" class="bg-brand-dark">All Time</option>
+                    </select>
+                </div>
+                <button onclick="openTransactionModal()" class="flex items-center gap-2 bg-gradient-to-r from-brand-primary to-brand-secondary px-4 py-2 rounded-full text-sm font-semibold shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 transition-all hover:-translate-y-0.5 text-white">
+                    <i class="ph ph-plus-circle text-lg"></i>
+                    <span class="hidden sm:inline">Add Record</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Dashboard Content -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
+            
+            <div id="pdf-content-area">
+                <!-- Net Worth & Assets Row (NEW) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group border-brand-primary/40 bg-brand-primary/5">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 transform group-hover:scale-110 transition-transform">
+                        <i class="ph ph-scales text-6xl text-brand-primary"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 font-medium mb-1">Net Worth (Kul Sampatti)</p>
+                    <h3 id="metric-networth" class="text-2xl lg:text-3xl font-bold text-white mb-2">₹0</h3>
+                    <p class="text-xs text-brand-primary">Total Balance + Assets + Lena - Dena</p>
+                </div>
+                <!-- Assets -->
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                    <p class="text-sm text-gray-400 font-medium mb-1">Assets (Sampatti)</p>
+                    <h3 id="metric-assets" class="text-2xl font-bold text-white mb-2">₹0</h3>
+                </div>
+                <!-- Receivables -->
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                    <p class="text-sm text-gray-400 font-medium mb-1">To Receive (Udhar Lena Hai)</p>
+                    <h3 id="metric-receivables" class="text-2xl font-bold text-brand-success mb-2">₹0</h3>
+                </div>
+                <!-- Payables -->
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                    <p class="text-sm text-gray-400 font-medium mb-1">To Pay (Udhar Dena Hai)</p>
+                    <h3 id="metric-payables" class="text-2xl font-bold text-brand-danger mb-2">₹0</h3>
+                </div>
+            </div>
+
+            <!-- Summary Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Total Balance -->
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 transform group-hover:scale-110 transition-transform">
+                        <i class="ph ph-wallet text-6xl text-white"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 font-medium mb-1">Available Balance</p>
+                    <h3 id="metric-balance" class="text-3xl font-bold text-white mb-2">₹0</h3>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-brand-success flex items-center bg-brand-success/10 px-2 py-0.5 rounded text-xs font-semibold">
+                            <i class="ph ph-trend-up mr-1"></i> Syncing...
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Monthly Income -->
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 transform group-hover:scale-110 transition-transform">
+                        <i class="ph ph-arrow-down-left text-6xl text-brand-success"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 font-medium mb-1">Monthly Income</p>
+                    <h3 id="metric-income" class="text-3xl font-bold text-brand-success mb-2">₹0</h3>
+                    <div class="w-full bg-black/30 h-1.5 rounded-full overflow-hidden mt-3">
+                        <div class="bg-brand-success h-full w-3/4 rounded-full"></div>
+                    </div>
+                </div>
+
+                <!-- Monthly Expenses -->
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 transform group-hover:scale-110 transition-transform">
+                        <i class="ph ph-arrow-up-right text-6xl text-brand-danger"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 font-medium mb-1">Monthly Expenses</p>
+                    <h3 id="metric-expense" class="text-3xl font-bold text-brand-danger mb-2">₹0</h3>
+                    <div class="w-full bg-black/30 h-1.5 rounded-full overflow-hidden mt-3">
+                        <div class="bg-brand-danger h-full w-1/2 rounded-full"></div>
+                    </div>
+                </div>
+
+                <!-- Savings Goal -->
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 transform group-hover:scale-110 transition-transform">
+                        <i class="ph ph-piggy-bank text-6xl text-brand-secondary"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 font-medium mb-1">Savings Goal</p>
+                    <h3 id="metric-savings" class="text-3xl font-bold text-brand-secondary mb-2">₹0</h3>
+                    <div class="flex justify-between items-end mt-2 text-xs text-gray-400">
+                        <span>Target: ₹1,00,000</span>
+                        <span id="metric-savings-pct">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Cash Flow Chart -->
+                <div class="lg:col-span-2 glass-panel p-6 rounded-2xl flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Cash Flow Overview</h3>
+                            <p class="text-xs text-gray-400">Last 6 months comparison</p>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-h-[300px] w-full relative">
+                        <canvas id="cashFlowChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Expense Categories -->
+                <div class="glass-panel p-6 rounded-2xl flex flex-col">
+                    <h3 class="text-lg font-bold text-white mb-1">Expenses by Category</h3>
+                    <p class="text-xs text-gray-400 mb-6">Current Month Breakdown</p>
+                    <div class="flex-1 flex items-center justify-center min-h-[250px] relative">
+                        <canvas id="categoryChart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-4">
+                            <span class="text-gray-400 text-xs">Total</span>
+                            <span id="doughnut-total" class="text-xl font-bold text-white">₹0</span>
+                        </div>
+                    </div>
+                    <div id="categoryLegend" class="mt-4 space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar"></div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions & Budgets Row -->
+            <div class="grid grid-cols-1 gap-6 pb-12">
+                <!-- Recent Transactions -->
+                <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-brand-border flex justify-between items-center bg-white/[0.02]">
+                        <h3 class="text-lg font-bold text-white">Recent Transactions</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-brand-border text-xs uppercase text-gray-500 bg-black/20">
+                                    <th class="px-6 py-4 font-medium">Description</th>
+                                    <th class="px-6 py-4 font-medium">Category</th>
+                                    <th class="px-6 py-4 font-medium">Date</th>
+                                    <th class="px-6 py-4 font-medium text-right">Amount (₹)</th>
+                                    <th class="px-6 py-4 font-medium text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsList" class="text-sm divide-y divide-brand-border/50">
+                                <!-- JS Injected -->
+                            </tbody>
+                        </table>
+                        
+                        <!-- Empty State -->
+                        <div id="emptyState" class="flex flex-col items-center justify-center py-12 px-4 text-center">
+                            <div class="w-16 h-16 rounded-full bg-brand-border flex items-center justify-center mb-4">
+                                <i class="ph ph-receipt text-3xl text-gray-400"></i>
+                            </div>
+                            <h4 class="text-white font-medium mb-1">No transactions yet</h4>
+                            <p class="text-gray-400 text-sm mb-4">Add your first income or expense to get started.</p>
+                            <button onclick="openTransactionModal()" class="text-brand-primary text-sm font-medium hover:underline hide-in-pdf">Add Transaction</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- End of PDF Content Area -->
+        </div>
+    </main>
+
+    <!-- Add Transaction Modal -->
+    <div id="transactionModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeTransactionModal()"></div>
+        
+        <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl relative z-10 transform scale-95 transition-transform duration-300" id="modalContent">
+            
+            <div class="flex justify-between items-center p-6 border-b border-brand-border">
+                <h3 id="modalTitle" class="text-xl font-bold text-white">New Record</h3>
+                <button onclick="closeTransactionModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="transactionForm" class="p-6 space-y-5">
+                <input type="hidden" id="editingTxId" value="">
+                
+                <!-- NEW: Professional Record Type Selector -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Record Type (Khaata)</label>
+                    <select id="txTypeSelect" onchange="window.setTransactionType(this.value)" class="glass-input w-full px-3 py-2.5 rounded-xl text-sm appearance-none cursor-pointer focus:border-brand-primary font-semibold text-white bg-black/40 border-brand-primary/50 shadow-inner">
+                        <option value="expense" class="bg-brand-dark text-white">Expense (Kharcha)</option>
+                        <option value="income" class="bg-brand-dark text-white">Income (Aamdani)</option>
+                        <option value="lend" class="bg-brand-dark text-brand-secondary">Udhar Diya (Lend Money)</option>
+                        <option value="repay_lend" class="bg-brand-dark text-brand-success">Udhar Wapas Aaya (Received Loan)</option>
+                        <option value="borrow" class="bg-brand-dark text-brand-danger">Udhar Liya (Borrow Money)</option>
+                        <option value="repay_borrow" class="bg-brand-dark text-brand-secondary">Udhar Chukaya (Repayed Loan)</option>
+                        <option value="asset_buy" class="bg-brand-dark text-brand-primary">Sampatti Kharedi (Buy Asset)</option>
+                        <option value="asset_sell" class="bg-brand-dark text-white">Sampatti Bechi (Sell Asset)</option>
+                    </select>
+                    <input type="hidden" id="txType" value="expense">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Amount (₹)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-medium">₹</span>
+                            <input type="number" id="txAmount" required step="1" min="1" class="glass-input w-full pl-8 pr-3 py-2.5 rounded-xl text-sm" placeholder="0">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Date</label>
+                        <input type="date" id="txDate" required class="glass-input w-full px-3 py-2.5 rounded-xl text-sm" style="color-scheme: dark;">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Description</label>
+                    <input type="text" id="txDesc" required class="glass-input w-full px-3 py-2.5 rounded-xl text-sm" placeholder="e.g., Weekly Groceries">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Category</label>
+                    <select id="txCategory" required class="glass-input w-full px-3 py-2.5 rounded-xl text-sm appearance-none cursor-pointer focus:border-brand-primary">
+                        <!-- JS Injected Options -->
+                    </select>
+                </div>
+                
+                <!-- Dynamic New Category Input -->
+                <div id="newCategoryContainer" class="hidden">
+                    <label class="block text-xs font-medium text-brand-primary mb-1">Create New Category</label>
+                    <div class="relative">
+                        <input type="text" id="newCategoryName" class="glass-input w-full pl-3 pr-3 py-2.5 rounded-xl text-sm border-brand-primary/50" placeholder="e.g., Kids Education, Pets">
+                        <i class="ph ph-sparkle absolute right-3 top-1/2 transform -translate-y-1/2 text-brand-primary"></i>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeTransactionModal()" class="flex-1 py-2.5 rounded-xl font-semibold text-sm border border-brand-border text-gray-300 hover:bg-white/5 transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-brand-primary to-brand-secondary text-white shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/40 transition-all">Save Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- GitHub Sync Modal -->
+    <div id="githubModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeGitHubModal()"></div>
+        <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl relative z-10 transform scale-95 transition-transform duration-300" id="githubModalContent">
+            <div class="flex justify-between items-center p-6 border-b border-brand-border">
+                <div class="flex items-center gap-2">
+                    <i class="ph ph-github-logo text-2xl text-brand-secondary"></i>
+                    <h3 class="text-xl font-bold text-white">GitHub Auto-Sync</h3>
+                </div>
+                <button onclick="closeGitHubModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-gray-400 mb-4">Securely push your data directly to a private GitHub repository for ultimate control. (Token is saved securely in your cloud profile).</p>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Personal Access Token (Classic)</label>
+                    <input type="password" id="ghToken" class="glass-input w-full px-3 py-2.5 rounded-xl text-sm" placeholder="ghp_xxxxxxxxxxxx">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Repository (username/repo)</label>
+                    <input type="text" id="ghRepo" class="glass-input w-full px-3 py-2.5 rounded-xl text-sm" placeholder="myuser/home-finance">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">File Path</label>
+                    <input type="text" id="ghPath" class="glass-input w-full px-3 py-2.5 rounded-xl text-sm" placeholder="data/backup.json">
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button onclick="window.syncToGitHub()" class="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-brand-secondary text-white shadow-lg shadow-brand-secondary/25 hover:shadow-brand-secondary/40 transition-all flex items-center justify-center gap-2">
+                        <i class="ph ph-cloud-arrow-up"></i> Push to GitHub
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-brand-dark border border-brand-border text-white px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <i id="toastIcon" class="ph ph-check-circle text-brand-success text-xl"></i>
+        <span id="toastMessage">Success</span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- State Management & Constants ---
+        const EXPENSE_CATEGORIES = ['Housing', 'Food', 'Transportation', 'Utilities', 'Shopping', 'Health', 'Bills', 'Other'];
+        const INCOME_CATEGORIES = ['Salary', 'Business', 'Investments', 'Gifts', 'Other'];
+        const LOAN_CATEGORIES = ['Friend', 'Family', 'Client', 'Business', 'Bank', 'Other'];
+        const ASSET_CATEGORIES = ['Property', 'Gold/Jewelry', 'Stocks/MF', 'Vehicle', 'Equipment', 'Other'];
+        
+        let customCategories = { expense: [], income: [], lend: [], borrow: [], repay_lend: [], repay_borrow: [], asset_buy: [], asset_sell: [] };
+        let transactions = [];
+        let db, auth, userId, appId;
+        window.currentTimeFilter = 'month';
+
+        const CHART_COLORS = ['#6366F1', '#A855F7', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6', '#14B8A6'];
+
+        // Utility: Toast Notification
+        const showToast = (msg, type = 'success') => {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = msg;
+            document.getElementById('toastIcon').className = type === 'success' 
+                ? 'ph ph-check-circle text-brand-success text-xl' 
+                : 'ph ph-warning-circle text-brand-danger text-xl';
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        };
+
+        // Utility: Format Currency to INR (₹)
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        };
+
+        const formatDate = (dateString) => {
+            return new Date(dateString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+        };
+
+        async function initFirebase() {
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'finpro-home';
+            const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+            
+            try {
+                const firebaseConfig = JSON.parse(configStr);
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Auth before Queries (Strict Rule)
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                userId = auth.currentUser?.uid;
+                if(userId) {
+                    loadData();
+                } else {
+                    showToast('Authentication failed.', 'error');
+                }
+            } catch(e) {
+                console.error("Firebase init failed:", e);
+                showToast("Running without cloud sync.", 'error');
+                // Could initialize local dummy data if strictly offline, 
+                // but environment relies on Firebase.
+            }
+        }
+
+        function loadData() {
+            if(!userId) return;
+
+            // Load Custom Categories
+            const catRef = collection(db, 'artifacts', appId, 'users', userId, 'categories');
+            onSnapshot(catRef, (snapshot) => {
+                // Reset custom categories
+                customCategories = { expense: [], income: [], lend: [], borrow: [], repay_lend: [], repay_borrow: [], asset_buy: [], asset_sell: [] };
+                
+                snapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    if(customCategories[data.type]) {
+                        customCategories[data.type].push(data.name);
+                    }
+                });
+                updateCategoryDropdown(document.getElementById('txType').value);
+            }, (err) => console.error("Categories snapshot error", err));
+
+            // Load Transactions
+            const txRef = collection(db, 'artifacts', appId, 'users', userId, 'transactions');
+            onSnapshot(txRef, (snapshot) => {
+                transactions = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                updateDashboard();
+                updateChartsData();
+            }, (err) => console.error("Transactions snapshot error", err));
+            
+            // Load GitHub Settings if they exist
+            getDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'github')).then(snap => {
+                if(snap.exists()) {
+                    const data = snap.data();
+                    document.getElementById('ghToken').value = data.token || '';
+                    document.getElementById('ghRepo').value = data.repo || '';
+                    document.getElementById('ghPath').value = data.path || 'data/backup.json';
+                }
+            });
+        }
+
+        async function saveTransaction(txData, editingId = null) {
+            if(!userId) return;
+            try {
+                const txRef = doc(db, 'artifacts', appId, 'users', userId, 'transactions', editingId || txData.id);
+                if (editingId) {
+                    await updateDoc(txRef, txData);
+                    showToast("Record updated successfully!");
+                } else {
+                    await setDoc(txRef, txData);
+                    showToast("Record saved successfully!");
+                }
+            } catch(e) {
+                showToast("Error saving record.", 'error');
+                console.error(e);
+            }
+        }
+
+        async function removeTransaction(id) {
+            if(!userId) return;
+            try {
+                const txRef = doc(db, 'artifacts', appId, 'users', userId, 'transactions', id);
+                await deleteDoc(txRef);
+                showToast("Record deleted.");
+            } catch(e) {
+                showToast("Error deleting record.", 'error');
+            }
+        }
+
+        async function saveCustomCategory(name, type) {
+            if(!userId) return;
+            try {
+                const catRef = doc(db, 'artifacts', appId, 'users', userId, 'categories', name);
+                await setDoc(catRef, { name, type });
+            } catch(e) {
+                console.error("Error saving category", e);
+            }
+        }
+
+        function calculateMetrics() {
+            const now = new Date();
+            
+            let cashIn = 0;
+            let cashOut = 0;
+            let filteredIncome = 0;
+            let filteredExpense = 0;
+            let totalAssets = 0;
+            let receivables = 0;
+            let payables = 0;
+
+            transactions.forEach(tx => {
+                const txDate = new Date(tx.date);
+                const amt = tx.amount;
+                
+                // Advanced Balance Sheet Logic (All time)
+                if (tx.type === 'income') cashIn += amt;
+                else if (tx.type === 'expense') cashOut += amt;
+                else if (tx.type === 'lend') { cashOut += amt; receivables += amt; }
+                else if (tx.type === 'repay_lend') { cashIn += amt; receivables -= amt; }
+                else if (tx.type === 'borrow') { cashIn += amt; payables += amt; }
+                else if (tx.type === 'repay_borrow') { cashOut += amt; payables -= amt; }
+                else if (tx.type === 'asset_buy') { cashOut += amt; totalAssets += amt; }
+                else if (tx.type === 'asset_sell') { cashIn += amt; totalAssets -= amt; }
+                
+                // Filtered totals (For P&L Dashboard display only calculates pure income/expense)
+                let includeInFilter = false;
+                if (window.currentTimeFilter === 'day') {
+                    includeInFilter = txDate.toDateString() === now.toDateString();
+                } else if (window.currentTimeFilter === 'month') {
+                    includeInFilter = txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+                } else if (window.currentTimeFilter === 'year') {
+                    includeInFilter = txDate.getFullYear() === now.getFullYear();
+                } else {
+                    includeInFilter = true;
+                }
+
+                if (includeInFilter) {
+                    if (tx.type === 'income') filteredIncome += amt;
+                    else if (tx.type === 'expense') filteredExpense += amt;
+                }
+            });
+
+            const totalBalance = cashIn - cashOut;
+            const netWorth = totalBalance + totalAssets + receivables - payables;
+            const savings = filteredIncome - filteredExpense;
+            const savingsPct = Math.max(0, Math.min(100, Math.round((totalBalance / 100000) * 100)));
+
+            return { totalBalance, totalIncome: filteredIncome, totalExpense: filteredExpense, savings, savingsPct, netWorth, totalAssets, receivables, payables };
+        }
+        
+        function updateDashboard() {
+            const metrics = calculateMetrics();
+            
+            // New Company Metrics
+            document.getElementById('metric-networth').textContent = formatCurrency(metrics.netWorth);
+            document.getElementById('metric-assets').textContent = formatCurrency(metrics.totalAssets);
+            document.getElementById('metric-receivables').textContent = formatCurrency(metrics.receivables);
+            document.getElementById('metric-payables').textContent = formatCurrency(metrics.payables);
+
+            // Existing Metrics
+            document.getElementById('metric-balance').textContent = formatCurrency(metrics.totalBalance);
+            document.getElementById('metric-income').textContent = formatCurrency(metrics.totalIncome);
+            document.getElementById('metric-expense').textContent = formatCurrency(metrics.totalExpense);
+            
+            const savingsEl = document.getElementById('metric-savings');
+            savingsEl.textContent = formatCurrency(metrics.totalBalance);
+            document.getElementById('metric-savings-pct').textContent = `${metrics.savingsPct}%`;
+
+            renderTransactionsList();
+        }
+
+        function renderTransactionsList() {
+            const listEl = document.getElementById('transactionsList');
+            const emptyState = document.getElementById('emptyState');
+            
+            listEl.innerHTML = '';
+            
+            const now = new Date();
+            let filteredTx = transactions.filter(tx => {
+                if (window.currentTimeFilter === 'all') return true;
+                const d = new Date(tx.date);
+                if (window.currentTimeFilter === 'day') return d.toDateString() === now.toDateString();
+                if (window.currentTimeFilter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                if (window.currentTimeFilter === 'year') return d.getFullYear() === now.getFullYear();
+                return true;
+            });
+
+            if (filteredTx.length === 0) {
+                listEl.parentElement.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            } else {
+                listEl.parentElement.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+
+            const recentTx = filteredTx.slice(0, 15); // Show more since we have filtering
+
+            recentTx.forEach(tx => {
+                // Determine styling based on type
+                let amountClass = 'text-white';
+                let prefix = '';
+                let iconClass = 'ph-receipt';
+
+                if (tx.type === 'income') { amountClass = 'text-brand-success'; prefix = '+'; iconClass = 'ph-arrow-down-left'; }
+                else if (tx.type === 'expense') { amountClass = 'text-white'; prefix = '-'; iconClass = 'ph-arrow-up-right'; }
+                else if (tx.type === 'lend') { amountClass = 'text-brand-secondary'; prefix = '-'; iconClass = 'ph-hand-coins'; }
+                else if (tx.type === 'repay_lend') { amountClass = 'text-brand-success'; prefix = '+'; iconClass = 'ph-handshake'; }
+                else if (tx.type === 'borrow') { amountClass = 'text-brand-danger'; prefix = '+'; iconClass = 'ph-bank'; }
+                else if (tx.type === 'repay_borrow') { amountClass = 'text-brand-secondary'; prefix = '-'; iconClass = 'ph-money'; }
+                else if (tx.type === 'asset_buy') { amountClass = 'text-brand-primary'; prefix = '-'; iconClass = 'ph-house-line'; }
+                else if (tx.type === 'asset_sell') { amountClass = 'text-brand-success'; prefix = '+'; iconClass = 'ph-currency-inr'; }
+
+                const tr = document.createElement('tr');
+                tr.className = 'group hover:bg-white/[0.02] transition-colors';
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-white/10 transition-colors">
+                                <i class="ph ${iconClass} text-gray-300"></i>
+                            </div>
+                            <span class="font-medium text-white">${tx.desc}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-400">
+                        <span class="bg-white/5 px-2 py-1 rounded text-xs border border-white/10">${tx.category}</span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-400">${formatDate(tx.date)}</td>
+                    <td class="px-6 py-4 text-right font-semibold ${amountClass}">
+                        ${prefix}${formatCurrency(tx.amount)}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="window.editTransaction('${tx.id}')" class="text-brand-primary hover:text-white transition-colors p-1.5 rounded-md hover:bg-brand-primary/20" title="Edit">
+                                <i class="ph ph-pencil-simple text-lg"></i>
+                            </button>
+                            <button onclick="window.deleteTransaction('${tx.id}')" class="text-gray-500 hover:text-brand-danger transition-colors p-1.5 rounded-md hover:bg-brand-danger/20" title="Delete">
+                                <i class="ph ph-trash text-lg"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                listEl.appendChild(tr);
+            });
+        }
+
+
+        let cashFlowChartInstance = null;
+        let categoryChartInstance = null;
+        Chart.defaults.color = '#94a3b8'; 
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        
+        function updateChartsData() {
+            if(cashFlowChartInstance) cashFlowChartInstance.destroy();
+            if(categoryChartInstance) categoryChartInstance.destroy();
+            
+            initCashFlowChart();
+            initCategoryChart();
+        }
+
+        function initCashFlowChart() {
+            const ctx = document.getElementById('cashFlowChart').getContext('2d');
+            const labels = [];
+            const incomeData = [];
+            const expenseData = [];
+            const today = new Date();
+            
+            if (window.currentTimeFilter === 'day') {
+                for(let i=6; i>=0; i--) {
+                    const d = new Date(today);
+                    d.setDate(today.getDate() - i);
+                    labels.push(d.toLocaleDateString('default', { weekday: 'short' }));
+                    
+                    let inc = 0, exp = 0;
+                    transactions.forEach(tx => {
+                        const txDate = new Date(tx.date);
+                        if(txDate.toDateString() === d.toDateString()) {
+                            if (tx.type === 'income') inc += tx.amount;
+                            else exp += tx.amount;
+                        }
+                    });
+                    incomeData.push(inc);
+                    expenseData.push(exp);
+                }
+            } else if (window.currentTimeFilter === 'year' || window.currentTimeFilter === 'all') {
+                 for (let i = 0; i < 12; i++) {
+                     labels.push(new Date(today.getFullYear(), i, 1).toLocaleString('default', { month: 'short' }));
+                     let inc = 0, exp = 0;
+                     transactions.forEach(tx => {
+                         const txDate = new Date(tx.date);
+                         if (txDate.getFullYear() === today.getFullYear() && txDate.getMonth() === i) {
+                             if (tx.type === 'income') inc += tx.amount;
+                             else exp += tx.amount;
+                         }
+                     });
+                     incomeData.push(inc);
+                     expenseData.push(exp);
+                 }
+            } else {
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                    labels.push(d.toLocaleString('default', { month: 'short' }));
+                    
+                    let inc = 0, exp = 0;
+                    transactions.forEach(tx => {
+                        const txDate = new Date(tx.date);
+                        if (txDate.getMonth() === d.getMonth() && txDate.getFullYear() === d.getFullYear()) {
+                            if (tx.type === 'income') inc += tx.amount;
+                            else exp += tx.amount;
+                        }
+                    });
+                    incomeData.push(inc);
+                    expenseData.push(exp);
+                }
+            }
+
+            const incomeGradient = ctx.createLinearGradient(0, 0, 0, 300);
+            incomeGradient.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
+            incomeGradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+            const expenseGradient = ctx.createLinearGradient(0, 0, 0, 300);
+            expenseGradient.addColorStop(0, 'rgba(239, 68, 68, 0.5)');
+            expenseGradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+
+            cashFlowChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: incomeData,
+                            borderColor: '#10B981',
+                            backgroundColor: incomeGradient,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Expenses',
+                            data: expenseData,
+                            borderColor: '#EF4444',
+                            backgroundColor: expenseGradient,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { color: '#94a3b8', font: { family: "'Inter', sans-serif" } } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initCategoryChart() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            const now = new Date();
+            const categoryTotals = {};
+            let totalFilteredExpense = 0;
+
+            transactions.forEach(tx => {
+                const txDate = new Date(tx.date);
+                if (tx.type === 'expense') {
+                    let include = false;
+                    if (window.currentTimeFilter === 'day') {
+                        include = txDate.toDateString() === now.toDateString();
+                    } else if (window.currentTimeFilter === 'month') {
+                        include = txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+                    } else if (window.currentTimeFilter === 'year') {
+                        include = txDate.getFullYear() === now.getFullYear();
+                    } else {
+                        include = true;
+                    }
+
+                    if(include) {
+                        categoryTotals[tx.category] = (categoryTotals[tx.category] || 0) + tx.amount;
+                        totalFilteredExpense += tx.amount;
+                    }
+                }
+            });
+
+            document.getElementById('doughnut-total').textContent = formatCurrency(totalFilteredExpense);
+
+            const labels = Object.keys(categoryTotals);
+            const data = Object.values(categoryTotals);
+
+            if(data.length === 0) {
+                labels.push('No Expenses');
+                data.push(1);
+            }
+
+            const colors = data.length === 1 && labels[0] === 'No Expenses' ? ['rgba(255,255,255,0.05)'] : CHART_COLORS;
+
+            categoryChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: data.length > 1 || labels[0] !== 'No Expenses',
+                            callbacks: {
+                                label: function(c) {
+                                    let val = formatCurrency(c.parsed);
+                                    let pct = Math.round((c.parsed / totalFilteredExpense) * 100) + '%';
+                                    return ` ${val} (${pct})`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const legendContainer = document.getElementById('categoryLegend');
+            legendContainer.innerHTML = '';
+            if (data.length > 1 || labels[0] !== 'No Expenses') {
+                labels.forEach((label, i) => {
+                    const value = categoryTotals[label];
+                    const pct = Math.round((value / totalFilteredExpense) * 100);
+                    const color = colors[i % colors.length];
+                    const item = document.createElement('div');
+                    item.className = 'flex justify-between items-center text-sm';
+                    item.innerHTML = `
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background-color: ${color}"></span><span class="text-gray-300">${label}</span></div>
+                        <div class="text-right"><span class="text-white font-medium block leading-tight">${formatCurrency(value)}</span><span class="text-xs text-gray-500 leading-tight">${pct}%</span></div>
+                    `;
+                    legendContainer.appendChild(item);
+                });
+            } else {
+                legendContainer.innerHTML = '<p class="text-center text-sm text-gray-500 italic mt-4">No data this month.</p>';
+            }
+        }
+
+        function updateCategoryDropdown(type) {
+            const select = document.getElementById('txCategory');
+            select.innerHTML = '';
+            
+            let baseCategories = [];
+            if (type === 'expense') baseCategories = EXPENSE_CATEGORIES;
+            else if (type === 'income') baseCategories = INCOME_CATEGORIES;
+            else if (type === 'asset_buy' || type === 'asset_sell') baseCategories = ASSET_CATEGORIES;
+            else baseCategories = LOAN_CATEGORIES;
+
+            const customCats = customCategories[type] || [];
+            const allCategories = [...baseCategories, ...customCats];
+            
+            allCategories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                opt.className = "bg-brand-dark text-white";
+                select.appendChild(opt);
+            });
+            
+            const optNew = document.createElement('option');
+            optNew.value = 'ADD_NEW';
+            optNew.textContent = '+ Create New Category...';
+            optNew.className = "bg-brand-dark text-brand-primary font-bold";
+            select.appendChild(optNew);
+            
+            document.getElementById('newCategoryContainer').classList.add('hidden');
+            document.getElementById('newCategoryName').removeAttribute('required');
+        }
+
+        document.getElementById('txCategory').addEventListener('change', (e) => {
+            const container = document.getElementById('newCategoryContainer');
+            const input = document.getElementById('newCategoryName');
+            if(e.target.value === 'ADD_NEW') {
+                container.classList.remove('hidden');
+                input.setAttribute('required', 'true');
+                input.focus();
+            } else {
+                container.classList.add('hidden');
+                input.removeAttribute('required');
+                input.value = '';
+            }
+        });
+
+        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('txAmount').value);
+            const date = document.getElementById('txDate').value;
+            const desc = document.getElementById('txDesc').value;
+            let category = document.getElementById('txCategory').value;
+            const type = document.getElementById('txType').value;
+            const editingId = document.getElementById('editingTxId').value;
+            
+            if (category === 'ADD_NEW') {
+                category = document.getElementById('newCategoryName').value.trim();
+                if(!category) return;
+                await saveCustomCategory(category, type);
+            }
+            
+            if (!amount || !date || !desc || !category) return;
+            
+            const newTx = {
+                type,
+                amount,
+                date,
+                desc,
+                category
+            };
+            
+            if(!editingId) newTx.id = Date.now().toString();
+            
+            await saveTransaction(newTx, editingId);
+            window.closeTransactionModal();
+        });
+
+        const exportJSON = () => {
+            if(transactions.length === 0) {
+                showToast("No data to export.", "error");
+                return;
+            }
+            const dataStr = JSON.stringify(transactions, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `HomeFin_Backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast("Backup exported successfully.");
+        };
+
+        const importJSON = (event) => {
+            const file = event.target.files[0];
+            if(!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if(Array.isArray(importedData)) {
+                        let count = 0;
+                        for(const tx of importedData) {
+                            if(tx.id && tx.amount && tx.category && tx.type) {
+                                // Save to Firebase merging with existing
+                                await saveTransaction(tx);
+                                count++;
+                            }
+                        }
+                        showToast(`Successfully imported ${count} records.`);
+                    } else {
+                        showToast("Invalid backup file format.", "error");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("Error reading file.", "error");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        };
+
+        // NEW: PDF Generation Logic
+        const downloadPDF = () => {
+            showToast("Generating PDF... Please wait.", "success");
+            
+            // Get the element to print
+            const element = document.getElementById('pdf-content-area');
+            
+            // Clone the element to manipulate it for PDF without affecting the UI
+            const clone = element.cloneNode(true);
+            
+            // Create a temporary container off-screen
+            const tempContainer = document.createElement('div');
+            tempContainer.style.position = 'absolute';
+            tempContainer.style.left = '-9999px';
+            tempContainer.style.top = '-9999px';
+            tempContainer.style.width = '1200px'; // Fixed width for consistent PDF layout
+            tempContainer.style.backgroundColor = '#0B0F19'; // Match dark theme background
+            tempContainer.style.padding = '20px';
+            tempContainer.appendChild(clone);
+            document.body.appendChild(tempContainer);
+            
+            // Basic cleanup for PDF: remove hover actions, action columns
+            const actionCells = clone.querySelectorAll('th:last-child, td:last-child');
+            actionCells.forEach(cell => {
+                if (cell.textContent.includes('Action') || cell.querySelector('button')) {
+                    cell.style.display = 'none';
+                }
+            });
+
+            const hideElements = clone.querySelectorAll('.hide-in-pdf');
+            hideElements.forEach(el => el.style.display = 'none');
+            
+            // Replace Charts with Images temporarily because canvas sometimes doesn't render well in html2pdf directly
+            const originalCanvasList = element.querySelectorAll('canvas');
+            const cloneCanvasList = clone.querySelectorAll('canvas');
+            
+            originalCanvasList.forEach((canvas, index) => {
+                const img = document.createElement('img');
+                img.src = canvas.toDataURL('image/png');
+                img.style.width = '100%';
+                img.style.maxHeight = canvas.style.height || '300px';
+                img.style.objectFit = 'contain';
+                cloneCanvasList[index].parentNode.replaceChild(img, cloneCanvasList[index]);
+            });
+
+            const dateStr = new Date().toISOString().split('T')[0];
+            const opt = {
+                margin:       10,
+                filename:     `FinPro_Report_${dateStr}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: '#0B0F19' },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Generate PDF
+            html2pdf().set(opt).from(clone).save().then(() => {
+                document.body.removeChild(tempContainer);
+                showToast("PDF downloaded successfully!");
+            }).catch(err => {
+                console.error("PDF generation failed", err);
+                document.body.removeChild(tempContainer);
+                showToast("Failed to generate PDF.", "error");
+            });
+        };
+
+        // Window level functions for UI
+        window.changeFilter = (val) => {
+            window.currentTimeFilter = val;
+            updateDashboard();
+            updateChartsData();
+        };
+
+        window.openTransactionModal = () => {
+            const modal = document.getElementById('transactionModal');
+            const content = document.getElementById('modalContent');
+            
+            document.getElementById('modalTitle').textContent = 'New Record';
+            document.getElementById('editingTxId').value = '';
+            document.getElementById('transactionForm').reset();
+            document.getElementById('txDate').valueAsDate = new Date();
+            
+            // Reset dropdown logic
+            document.getElementById('txTypeSelect').value = 'expense';
+            window.setTransactionType('expense'); 
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.editTransaction = (id) => {
+            const tx = transactions.find(t => t.id === id);
+            if(!tx) return;
+            
+            document.getElementById('modalTitle').textContent = 'Edit Record';
+            document.getElementById('editingTxId').value = tx.id;
+            document.getElementById('txAmount').value = tx.amount;
+            document.getElementById('txDate').value = tx.date;
+            document.getElementById('txDesc').value = tx.desc;
+            
+            // Update dropdown logically
+            document.getElementById('txTypeSelect').value = tx.type;
+            window.setTransactionType(tx.type);
+            
+            // Must wait a microtick to ensure category list is populated before setting value
+            setTimeout(() => {
+                document.getElementById('txCategory').value = tx.category;
+            }, 0);
+            
+            const modal = document.getElementById('transactionModal');
+            const content = document.getElementById('modalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeTransactionModal = () => {
+            const modal = document.getElementById('transactionModal');
+            const content = document.getElementById('modalContent');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        window.openGitHubModal = () => {
+            const modal = document.getElementById('githubModal');
+            const content = document.getElementById('githubModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeGitHubModal = () => {
+            const modal = document.getElementById('githubModal');
+            const content = document.getElementById('githubModalContent');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        window.syncToGitHub = async () => {
+            const ghToken = document.getElementById('ghToken').value.trim();
+            const ghRepo = document.getElementById('ghRepo').value.trim();
+            const ghPath = document.getElementById('ghPath').value.trim();
+
+            if (!ghToken || !ghRepo || !ghPath) {
+                showToast("Please fill all GitHub details", "error");
+                return;
+            }
+            
+            showToast("Syncing to GitHub...");
+            const btn = event.currentTarget;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Syncing...';
+            btn.disabled = true;
+
+            // Save credentials to Firebase user settings
+            if(userId) {
+                await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'github'), {
+                    token: ghToken, repo: ghRepo, path: ghPath
+                });
+            }
+
+            const url = `https://api.github.com/repos/${ghRepo}/contents/${ghPath}`;
+            const headers = {
+                'Authorization': `Bearer ${ghToken}`,
+                'Accept': 'application/vnd.github.v3+json'
+            };
+
+            try {
+                // 1. Get file SHA if it exists
+                let sha = null;
+                const getRes = await fetch(url, { headers });
+                if (getRes.ok) {
+                    const data = await getRes.json();
+                    sha = data.sha;
+                }
+
+                // 2. Upload new data
+                const contentStr = JSON.stringify(transactions, null, 2);
+                // Handle unicode safely for btoa
+                const content = btoa(unescape(encodeURIComponent(contentStr)));
+                
+                const body = {
+                    message: `Auto-sync from FinPro App: ${new Date().toISOString()}`,
+                    content: content
+                };
+                if (sha) body.sha = sha;
+
+                const putRes = await fetch(url, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify(body)
+                });
+
+                if (putRes.ok) {
+                    showToast("Successfully synced to GitHub!");
+                    window.closeGitHubModal();
+                } else {
+                    const err = await putRes.json();
+                    showToast("Sync failed: " + (err.message || 'Unknown error'), "error");
+                }
+            } catch (e) {
+                showToast("GitHub error: " + e.message, "error");
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        };
+
+        window.setTransactionType = (type) => {
+            document.getElementById('txType').value = type;
+            // Removed old toggle buttons logic, update dropdown directly
+            updateCategoryDropdown(type);
+        };
+
+        window.deleteTransaction = removeTransaction;
+        window.exportJSON = exportJSON;
+        window.importJSON = importJSON;
+        window.downloadPDF = downloadPDF;
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            if(sidebar.classList.contains('hidden')) {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('absolute', 'z-50', 'bg-brand-dark/95', 'backdrop-blur-xl');
+                
+                const backdrop = document.createElement('div');
+                backdrop.id = 'mobileMenuBackdrop';
+                backdrop.className = 'fixed inset-0 bg-black/50 z-40';
+                backdrop.onclick = () => {
+                    sidebar.classList.add('hidden');
+                    sidebar.classList.remove('absolute', 'z-50', 'bg-brand-dark/95', 'backdrop-blur-xl');
+                    document.body.removeChild(backdrop);
+                };
+                document.body.appendChild(backdrop);
+            }
+        });
+
+        // Initialize on mount
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            initFirebase();
+        });
+    </script>
+</body>
+</html>
